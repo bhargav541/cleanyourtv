@@ -202,6 +202,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private final Runnable turnTick = this::updatePanel;
     /** config.xml show_stats, overridable by a theme. Off: the line is gone and nothing is read. */
     private boolean showStats;
+    /** config.xml stats_pill: RAM and free storage in a pill by Inputs; turns showStats on. */
+    private boolean statsPill;
+    /** config.xml bluetooth_pill: the pill right of Wi-Fi; null while off. */
+    private TextView btnBluetooth;
+    private BluetoothPill bluetoothPill;
     /** config.xml inputs_connected_only: the Inputs menu lists only connected inputs, the rest behind "More inputs". */
     private boolean inputsConnectedOnly;
     private boolean shamsi;
@@ -541,6 +546,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // The rotation runs on the clock that never jumps: setting the TV's time must not stall or stretch a turn.
         rotationStart = SystemClock.elapsedRealtime();
         showStats = cfg.showStats;
+        // stats_pill: the same reader, shown in the pill left of Inputs instead of under the clock.
+        statsPill = getResources().getBoolean(R.bool.stats_pill);
+        if (statsPill) {
+            showStats = true;
+            stats = findViewById(R.id.btnStats);
+        }
         inputsConnectedOnly = cfg.inputsConnectedOnly;
         shamsi = cfg.shamsiDate;
         lunarDate = findViewById(R.id.lunarDate);
@@ -832,6 +843,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (cfg.wifiLabelWidth > 0) btnWifi.setMaxWidth(Math.round(cfg.wifiLabelWidth * density));
             else makeIconOnly(btnWifi);
             makeIconOnly((TextView) btnSettings);
+        } else if (statsPill) {
+            // The stats pill takes the network name's room: at 720p the greeting and date were cut short.
+            wifiIconOnly = true;
+            makeIconOnly(btnWifi);
+        }
+        btnBluetooth = findViewById(R.id.btnBluetooth);
+        if (getResources().getBoolean(R.bool.bluetooth_pill) && !cfg.topMenu) {
+            btnBluetooth.setVisibility(View.VISIBLE);
+            bluetoothPill = new BluetoothPill(this, btnBluetooth);
+            btnBluetooth.setOnClickListener(v -> open(bluetoothSettings()));
+            btnBluetooth.setOnLongClickListener(v -> {
+                open(systemIntent(Settings.ACTION_SETTINGS));
+                return true;
+            });
+            makeIconOnly(btnBluetooth);
         }
         if (cfg.iconOnlyInputs) makeIconOnly((TextView) btnInputs);
         iconOnlyVpn = vpnPill && cfg.iconOnlyVpn;
@@ -864,6 +890,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         };
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
+        btnBluetooth.setOnKeyListener(pillKeys);
         btnVpn.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
         btnReorder.setOnKeyListener(pillKeys);
@@ -1055,6 +1082,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             pillsShown = true;
         }
         if (showStats) startStats();
+        if (bluetoothPill != null) bluetoothPill.start();
         if (gameDay != null) gameDay.start();
         sky.update();
         wallpaperPlayer.start();
@@ -1236,6 +1264,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         handler.removeCallbacks(openWhenOnline);
         startPending = null;   // leaving Home before the network came back: the boot's app stays closed
         stopStats();
+        if (bluetoothPill != null) bluetoothPill.stop();
         if (gameDay != null) gameDay.stop();
         handler.removeCallbacks(turnTick);
         if (lamp != null) lamp.stop();
@@ -2179,6 +2208,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private String readStatsLine() {
+        if (statsPill) {
+            // Pill: no CPU, short labels, so it fits beside the other pills at 720p.
+            StringBuilder line = new StringBuilder();
+            long[] mem = memUsedOfTotalMb();
+            if (mem != null) appendStat(line, getString(R.string.stats_pill_memory, mem[0], mem[1]));
+            String free = formatGb(getResources(), Environment.getDataDirectory().getFreeSpace());
+            if (!free.isEmpty()) appendStat(line, getString(R.string.stats_pill_storage, free));
+            return StatsText.forLocale(line.toString(), getResources().getConfiguration().getLocales().get(0));
+        }
         int cpu = cpuPercent();
         if (cpu < 0) {
             try {
@@ -2351,7 +2389,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     rtlAppGrid, keyCode == KeyEvent.KEYCODE_DPAD_LEFT);
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-            if (position < COLUMNS) return false;          // dock row: let focus move to the top bar
+            if (position < COLUMNS) {
+                // stats_pill moves the pills right, and the focus finder then took Wi-Fi over Inputs from the first
+                // dock tile: go to Inputs, the bar's first button, as without the pill.
+                if (statsPill && btnInputs.getVisibility() == View.VISIBLE) {
+                    btnInputs.requestFocus();
+                    return true;
+                }
+                return false;                              // dock row: let focus move to the top bar
+            }
             target = position - COLUMNS;
         } else {
             int lastRowStart = ((count - 1) / COLUMNS) * COLUMNS;
@@ -2412,7 +2458,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         ViewGroup bar = findViewById(R.id.topButtons);
         for (int i = 0; i < bar.getChildCount(); i++) {
             View button = bar.getChildAt(i);
-            if (button != btnInputs && button.getVisibility() == View.VISIBLE) return button;
+            // isFocusable: the stats pill is only there to read.
+            if (button != btnInputs && button.getVisibility() == View.VISIBLE && button.isFocusable()) return button;
         }
         return findViewById(R.id.btnSettings);
     }
@@ -3050,6 +3097,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Every settings entry shares the standard intent and the vendor fallback (SystemSettings). */
     private Intent systemIntent(String standardAction) {
         return SystemSettings.intent(this, standardAction);
+    }
+
+    /** Bluetooth settings; Android TV builds without them (Xiaomi MiTV-AXSO0) have the pairing screen instead. */
+    private Intent bluetoothSettings() {
+        PackageManager pm = getPackageManager();
+        Intent standard = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+        if (pm.resolveActivity(standard, PackageManager.MATCH_DEFAULT_ONLY) != null) return standard;
+        Intent pairing = new Intent("com.google.android.intent.action.CONNECT_INPUT");
+        if (pm.resolveActivity(pairing, PackageManager.MATCH_DEFAULT_ONLY) != null) return pairing;
+        return systemIntent(Settings.ACTION_SETTINGS);
     }
 
     /** Hides the Inputs pill when it would have nothing to list: streaming boxes have no HDMI-in, AV or tuner. */

@@ -41,6 +41,12 @@
     <string name="stats_cpu">CPU %1$d%%</string>
     <string name="stats_memory">Memory %1$d / %2$d MB</string>
     <string name="stats_storage">Storage %1$s free</string>
+    <string name="stats_pill_memory" translatable="false">RAM %1$d / %2$d MB</string>
+    <string name="stats_pill_storage" translatable="false">%1$s free</string>
+    <string name="bluetooth" translatable="false">Bluetooth</string>
+    <string name="bluetooth_off" translatable="false">Bluetooth off</string>
+    <string name="bluetooth_none" translatable="false">Bluetooth, nothing connected</string>
+    <string name="bluetooth_connected" translatable="false">Bluetooth: %1$s</string>
     <string name="storage_gb_whole">%1$.0f GB</string>
     <string name="storage_gb_decimal">%1$.1f GB</string>
     <string name="dream_name">Clock</string>

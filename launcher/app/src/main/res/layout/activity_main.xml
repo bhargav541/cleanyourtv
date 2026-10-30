@@ -332,6 +332,16 @@
                 android:clipToPadding="false"
                 android:orientation="horizontal">
 
+                <!-- stats_pill: RAM and free storage, shown only to read; it never takes focus, so the D-pad
+                     moves between the other pills exactly as without it. -->
+                <TextView
+                    android:id="@+id/btnStats"
+                    style="@style/TopButton"
+                    android:visibility="gone"
+                    android:singleLine="true"
+                    android:focusable="false"
+                    android:clickable="false" />
+
                 <TextView
                     android:id="@+id/btnInputs"
                     style="@style/TopButton"
@@ -347,6 +357,15 @@
                     android:ellipsize="end"
                     android:text="@string/wifi"
                     android:drawableStart="@drawable/ic_wifi"
+                    android:nextFocusDown="@+id/grid" />
+
+                <!-- bluetooth_pill: a round icon; the connected devices' names are its description. -->
+                <TextView
+                    android:id="@+id/btnBluetooth"
+                    style="@style/TopButton"
+                    android:visibility="gone"
+                    android:text="@string/bluetooth"
+                    android:drawableStart="@drawable/ic_bluetooth"
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView

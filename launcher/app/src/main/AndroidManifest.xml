@@ -21,6 +21,10 @@
     <!-- YaOS (Yandex TV OS): HDMI, AV and the tuner all play in com.yandex.tv.live, whose activities require
          this permission (protection level normal, so it is granted at install). Ignored on other TVs. -->
     <uses-permission android:name="yandex.tv.permission.ACCESS_TV_SOURCE" />
+    <!-- bluetooth_pill: the connected devices' names. BLUETOOTH is granted at install up to Android 11; from
+         Android 12 the pill needs BLUETOOTH_CONNECT, which is never requested and shows "Bluetooth" alone without it. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <!-- Android 11+ package visibility: lets the launcher list the TV apps it shows as tiles, and the
          apps that declare a module card (docs/specs/card.md). -->
@@ -31,6 +35,13 @@
         </intent>
         <intent>
             <action android:name="android.settings.WIFI_SETTINGS" />
+        </intent>
+        <!-- bluetooth_pill: Bluetooth settings, or Android TV's pairing screen where that is missing. -->
+        <intent>
+            <action android:name="android.settings.BLUETOOTH_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="com.google.android.intent.action.CONNECT_INPUT" />
         </intent>
         <intent>
             <action android:name="android.settings.DISPLAY_SETTINGS" />

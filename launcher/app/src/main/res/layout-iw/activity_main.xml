@@ -377,6 +377,15 @@
                     android:text="@string/vpn"
                     android:nextFocusDown="@+id/grid" />
 
+                <!-- bluetooth_pill: a round icon; the connected devices' names are its description. -->
+                <TextView
+                    android:id="@+id/btnBluetooth"
+                    style="@style/TopButton"
+                    android:visibility="gone"
+                    android:text="@string/bluetooth"
+                    android:drawableStart="@drawable/ic_bluetooth"
+                    android:nextFocusDown="@+id/grid" />
+
                 <TextView
                     android:id="@+id/btnWifi"
                     style="@style/TopButton"
@@ -393,6 +402,15 @@
                     android:text="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
                     android:nextFocusDown="@+id/grid" />
+
+                <!-- stats_pill: RAM and free storage, shown only to read; it never takes focus. -->
+                <TextView
+                    android:id="@+id/btnStats"
+                    style="@style/TopButton"
+                    android:visibility="gone"
+                    android:singleLine="true"
+                    android:focusable="false"
+                    android:clickable="false" />
             </LinearLayout>
         </RelativeLayout>
 
