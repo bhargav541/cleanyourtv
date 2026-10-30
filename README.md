@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/PRESS.md"><img src="docs/card-halloween.jpg" alt="371 TV models · 100 brands · 31 languages · 572 KB launcher. Featured in TechCrunch, TechRadar, Tom's Guide, Mashable, Android Authority, XDA, FlatpanelsHD, It's FOSS, Phandroid, GIGAZINE, Xataka, WinFuture, Frandroid, Macitynet, Techaeris, TechPP and 298 more: 314 articles from 44 countries. Before: stock Google TV home with a sponsored ad. After: the Clean Your TV launcher." width="800"></a>
+  <a href="docs/PRESS.md"><img src="docs/card-halloween.jpg" alt="371 TV models · 100 brands · 31 languages · 572 KB launcher. Featured in TechCrunch, TechRadar, Tom's Guide, Mashable, Android Authority, XDA, FlatpanelsHD, It's FOSS, Phandroid, GIGAZINE, Xataka, WinFuture, Frandroid, Macitynet, Techaeris, TechPP and 330 more: 346 articles from 46 countries. Before: stock Google TV home with a sponsored ad. After: the Clean Your TV launcher." width="800"></a>
 </p>
 
 ## Start here
@@ -374,6 +374,15 @@ land it installs over the cleaned-up system, so a package comes back and you re-
 
 Streaming apps still update through the Play Store, which is left alone.
 The launcher just lists what is installed and launches it with intents that have been stable for a decade.
+
+</details>
+
+<details>
+<summary><b>How do I rearrange my apps?</b></summary>
+
+Hold OK on **Settings** (top right) and choose **Reorder apps**. OK picks an app up, the arrows move it,
+Back places it, and Back again finishes. With `tile_menu` on, holding OK on a tile offers **Move**, which
+picks that app up straight away. More: [docs/launcher.md](docs/launcher.md#launcher-settings-and-the-default-home)
 
 </details>
 

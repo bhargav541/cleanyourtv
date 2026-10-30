@@ -169,9 +169,9 @@ Things that bit us or contributors, so they don't bite you. Commands use `tools/
   and returns once the request is accepted. The TV is still restarting at that point, so let it
   answer again (`tools/tv.py --probe`) before the next command.
 - **Every `dumpsys` answers `Service dumps disabled due to hung system process.`**, and `tools/disable.sh`
-  skips every package in the list with "the TV's dumpsys shows neither a requested nor a granted permission
-  block". That message names Android 5.x, but the cause here is another one: Android's watchdog turns service
-  dumps off once it has seen `system_server` hang, and they stay off until `system_server` restarts.
+  skips every package in the list and says to reboot first (older copies of the script said "the TV's dumpsys
+  shows neither a requested nor a granted permission block" and named Android 5.x instead). Android's watchdog
+  turns service dumps off once it has seen `system_server` hang, and they stay off until `system_server` restarts.
   `dumpsys activity` and `dumpsys connectivity` print nothing useful either, so the Home check cannot read the
   focused app. On a Xiaomi Mi TV 4A (MiTV-MOOQ1, Android TV 11, `RTM4.220307.164.8277`) that had been up for
   almost eight days, the load average was around 62 and `logcat` held repeated watchdog lines from
@@ -704,10 +704,18 @@ Things that bit us or contributors, so they don't bite you. Commands use `tools/
   that restarts it (a crash, a force-stop, an update) needs the same sequence. Re-enabling the
   wizard is not always enough after a reboot: on a Chromecast with Google TV 4K (`sabrina`,
   UTTC.250917.004) no `ClientAuthSigner` line came within 3 minutes and phones did not even list the
-  device. Restart the receiver while setupwraith is enabled instead: `am force-stop
-  com.google.android.apps.mediashell`, then `am start-foreground-service -n
-  com.google.android.apps.mediashell/.CastReceiverService` (after a force-stop nothing starts it
-  again), and the signer line and `MdnsAppFilter: Done announcing.` follow within seconds. Reported on Google's
+  device. Restart the receiver while setupwraith is enabled instead: `pm enable
+  com.google.android.tungsten.setupwraith`, `logcat -c`, then `am crash com.google.android.apps.mediashell`.
+  The system starts the receiver again with a new pid, and `Created singleton instance of ClientAuthSigner`
+  follows within seconds. Before trusting that line, check the pid (`pidof
+  com.google.android.apps.mediashell`) is still the same 30 s later, then `pm disable-user --user 0
+  com.google.android.tungsten.setupwraith`; with no `No private key` line after that, casting works
+  ([#2615](https://github.com/Gathin23/cleanyourtv/issues/2615)). Do not restart it with `am force-stop`
+  plus `am start-foreground-service -n com.google.android.apps.mediashell/.CastReceiverService`: started
+  that way the receiver never calls `startForeground()`, Android kills it after 30 s
+  (`ForegroundServiceDidNotStartInTimeException`), and the copy that comes back once setupwraith is off
+  has no credentials, although the killed one had logged the signer line. `am kill` leaves it running
+  with the same pid. Reported on Google's
   own Chromecast hardware (`boreal`) and, with the same log lines, on a Google TV Streamer
   (`kirkwood`, `UTTK.260317.003`), where the `CastInfoProvider` also lives inside the setupwraith
   APK; the Xiaomi Mi Box S 2nd gen list says casting from a Pixel still works there with
